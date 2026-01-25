@@ -62,18 +62,18 @@ export default function Home() {
 
   return (
     <div className={cn(
-      "min-h-[100dvh] flex flex-col bg-brand-cream selection:bg-brand-yellow/30 transition-all duration-700",
-      !showResults && "h-[100dvh] overflow-hidden"
+      "min-h-screen flex flex-col bg-brand-cream selection:bg-brand-yellow/30 transition-all duration-700",
+      !showResults && "h-screen overflow-hidden"
     )}>
       <Header />
 
       <main className={cn(
         "flex-1 w-full max-w-4xl mx-auto px-4 flex flex-col items-center transition-all duration-700",
-        !showResults ? "justify-center -mt-16 pb-0" : "py-12 md:py-20 gap-12"
+        !showResults ? "justify-center pb-20" : "py-8 md:py-20 gap-8 md:gap-12"
       )}>
         <div className={cn(
           "w-full flex flex-col items-center transition-all duration-700",
-          !showResults ? "gap-8" : "gap-12"
+          !showResults ? "gap-6 md:gap-8" : "gap-8 md:gap-12"
         )}>
           {/* Hero Section */}
           <motion.section
@@ -82,11 +82,11 @@ export default function Home() {
             transition={{ duration: 0.6 }}
             className="text-center space-y-4 max-w-2xl"
           >
-            <h1 className="text-4xl md:text-6xl font-serif font-bold text-brand-black leading-tight">
+            <h1 className="text-3xl md:text-6xl font-serif font-bold text-brand-black leading-tight">
               Lagi bingung mau <span className="text-brand-orange">masak</span> apa?
             </h1>
             {!showResults && (
-              <p className="text-lg text-brand-black/60 font-medium">
+              <p className="text-base md:text-lg text-brand-black/60 font-medium">
                 Tulis saja bahan yang kamu punya, biar kami yang bantu carikan ide yang masuk akal.
               </p>
             )}
