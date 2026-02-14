@@ -27,12 +27,24 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
+  const [usageCount, setUsageCount] = useLocalStorage<{ count: number; date: string }>("isidapur_usage", { count: 0, date: new Date().toLocaleDateString() });
+
+  // Reset usage if it's a new day
+  useEffect(() => {
+    const today = new Date().toLocaleDateString();
+    if (usageCount.date !== today) {
+      setUsageCount({ count: 0, date: today });
+    }
+  }, [usageCount.date, setUsageCount]);
 
   useEffect(() => {
     if (recipes.length > 0) {
       setHasSearched(true);
     }
   }, [recipes]);
+
+  const remaining = Math.max(0, 3 - usageCount.count);
+  const isLimitReached = usageCount.count >= 3;
 
   const fetchRecommendations = async () => {
     if (ingredients.length === 0) return;
@@ -48,11 +60,22 @@ export default function Home() {
       });
 
       const data = await res.json();
+
+      if (res.status === 429) {
+        alert(data.error || "Duh, kuotamu habis nih. Besok lagi ya!");
+        setUsageCount(prev => ({ ...prev, count: 3 })); // Sync if server says limit reached
+        return;
+      }
+
       if (data.recommendations) {
         setRecipes(data.recommendations);
+        setUsageCount(prev => ({ ...prev, count: prev.count + 1 }));
+      } else if (data.error) {
+        alert(data.error);
       }
     } catch (error) {
       console.error("Failed to fetch recipes:", error);
+      alert("Lagi nggak nyambung. Coba lagi ya.");
     } finally {
       setLoading(false);
     }
@@ -109,28 +132,39 @@ export default function Home() {
               setSelectedFilters={setSelectedFilters}
             />
 
-            <button
-              onClick={fetchRecommendations}
-              disabled={loading || ingredients.length === 0}
-              className={cn(
-                "w-full py-4 rounded-[12px] font-bold text-lg flex items-center justify-center gap-2 transition-all",
-                loading || ingredients.length === 0
-                  ? "bg-brand-black/5 text-brand-black/20 cursor-not-allowed"
-                  : "bg-brand-yellow text-brand-black shadow-lg shadow-brand-yellow/20 hover:scale-[1.01] active:scale-[0.99]"
-              )}
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  Lagi mikir sebentar...
-                </>
-              ) : (
-                <>
-                  <Search className="w-5 h-5" />
-                  Cari Masakan
-                </>
-              )}
-            </button>
+            <div className="space-y-4">
+              <button
+                onClick={fetchRecommendations}
+                disabled={loading || ingredients.length === 0 || isLimitReached}
+                className={cn(
+                  "w-full py-4 rounded-[12px] font-bold text-lg flex items-center justify-center gap-2 transition-all",
+                  loading || ingredients.length === 0 || isLimitReached
+                    ? "bg-brand-black/5 text-brand-black/20 cursor-not-allowed"
+                    : "bg-brand-yellow text-brand-black shadow-lg shadow-brand-yellow/20 hover:scale-[1.01] active:scale-[0.99]"
+                )}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Lagi mikir sebentar...
+                  </>
+                ) : (
+                  <>
+                    <Search className="w-5 h-5" />
+                    Cari Masakan
+                  </>
+                )}
+              </button>
+
+              <p className={cn(
+                "text-center text-xs font-bold uppercase tracking-wider transition-colors",
+                isLimitReached ? "text-brand-orange" : "text-brand-black/30"
+              )}>
+                {isLimitReached
+                  ? "Kuota hari ini sudah habis. Sampai jumpa besok!"
+                  : `Sisa kuota hari ini: ${remaining}x cari`}
+              </p>
+            </div>
           </motion.section>
         </div>
 
